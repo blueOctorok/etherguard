@@ -67,16 +67,19 @@ contract JavaBean is ERC20, Pausable, Ownable {
         address to,
         uint256 amount
     ) internal virtual override whenNotPaused checkCooldown(from) {
+    // Only check max transaction amount for transfers (not minting or burning)
+    if (from != address(0) && to != address(0)) {
         require(
             amount <= maxTransactionAmount,
             "JavaBean: Transfer amount exceeds maximum"
         );
-        
-        super._beforeTokenTransfer(from, to, amount);
-        
-        if(from != address(0)) { // Exclude minting from cooldown
-            _lastTransferTime[from] = block.timestamp;
-            emit CooldownTriggered(from, block.timestamp);
-        }
     }
+    
+    super._beforeTokenTransfer(from, to, amount);
+    
+    if(from != address(0)) { // Exclude minting from cooldown
+        _lastTransferTime[from] = block.timestamp;
+        emit CooldownTriggered(from, block.timestamp);
+    }
+}
 }
