@@ -30,7 +30,31 @@ describe('JavaBean', () => {
     })
   })
 
-  describe('Transfer', () => {
-    const transferAmount = '1000'
+  describe('Transfers', () => {
+    const transferAmount = '1000' // Try to transfer 1000 tokens
+
+    beforeEach(async () => {
+      // Owner sends some tokens to user1 for testing
+      await javabean.transfer(user1.address, tokens('10000'))
+    })
+
+    it('enforces max transaction limit', async () => {
+      const tooMuch = '20000000' // More than 1% of total supply
+      await expect(
+        javabean.transfer(user2.address, tokens(tooMuch))
+      ).to.be.rejectedWith('JavaBean: Transfer amount exceeds maximum')
+    })
+
+    it('enforces cooldown period', async () => {
+      // First transfer should work
+      await javabean
+        .connect(user1)
+        .transfer(user2.address, tokens(transferAmount))
+
+      // Second immediate transfer should fail
+      await expect(
+        javabean.connect(user1).transfer(user2.address, tokens(transferAmount))
+      ).to.be.rejectedWith('JavaBean: Cooldown period active')
+    })
   })
 })

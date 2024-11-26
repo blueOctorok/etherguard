@@ -51,7 +51,7 @@ contract JavaBean is ERC20, Pausable, Ownable {
     function recoverERC20(address tokenAddress, uint256 tokenAmount) public onlyOwner {
         require(tokenAddress != address(this), 'JavaBean: Cannot recover JavaBean tokens');
         IERC20(tokenAddress).transfer(owner(), tokenAmount);
-        emit TokensRecovered(tokenAddress, tokenAmount);
+        emit TokensRecovered(tokenAddress, tokenAmount); 
     }
 
     // modifier that checks if enough time has passed
@@ -65,21 +65,26 @@ contract JavaBean is ERC20, Pausable, Ownable {
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 amount
-    ) internal virtual override whenNotPaused checkCooldown(from) {
-    // Only check max transaction amount for transfers (not minting or burning)
+        uint256 amount 
+    ) internal virtual override whenNotPaused { 
+    // First, check maximum transfer amount (simpler check)
     if (from != address(0) && to != address(0)) {
-        require(
+        require( 
             amount <= maxTransactionAmount,
-            "JavaBean: Transfer amount exceeds maximum"
+            "JavaBean: Transfer amount exceeds maximum" 
         );
     }
     
-    super._beforeTokenTransfer(from, to, amount);
-    
-    if(from != address(0)) { // Exclude minting from cooldown
+    // Then check cooldown (more complex, time-based check)
+    if (from != address(0)) {
+        require(
+            _lastTransferTime[from] + TRANSFER_COOLDOWN <= block.timestamp,
+            "JavaBean: Cooldown period active. Good boys wait!"
+        );
         _lastTransferTime[from] = block.timestamp;
         emit CooldownTriggered(from, block.timestamp);
     }
-}
+    
+    super._beforeTokenTransfer(from, to, amount);
+    }
 }
