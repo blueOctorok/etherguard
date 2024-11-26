@@ -57,4 +57,74 @@ describe('JavaBean', () => {
       ).to.be.rejectedWith('JavaBean: Cooldown period active')
     })
   })
+
+  describe('Owner functions', () => {
+    let mockToken
+
+    beforeEach(async () => {
+      // Deploy a fresh mock token before each test
+      const MockToken = await ethers.getContractFactory('JavaBean')
+      mockToken = await MockToken.deploy()
+      await mockToken.waitForDeployment()
+    })
+
+    it('allows owner to pause and unpause', async () => {
+      // Pause
+      await javabean.pause()
+      expect(await javabean.paused()).to.equal(true)
+
+      // Try transfer while paused
+      await expect(javabean.transfer(user1.address, tokens('1000'))).to.be
+        .reverted
+
+      // Unpause
+      await javabean.unpause()
+      expect(await javabean.paused()).to.equal(false)
+
+      // Transfer should now work
+      await expect(javabean.transfer(user1.address, tokens('1000'))).to.not.be
+        .reverted
+    })
+
+    it('allows recovery of accidentally sent tokens', async () => {
+      const javaBeanAddress = await javabean.getAddress()
+      const mockTokenAddress = await mockToken.getAddress()
+
+      // First send some mock tokens to our JavaBean contract
+      await mockToken.transfer(javaBeanAddress, tokens('1000'))
+
+      // Get initial balance
+      const initialBalance = await mockToken.balanceOf(owner.address)
+
+      // Recover the tokens
+      await javabean.recoverERC20(mockTokenAddress, tokens('1000'))
+
+      // Check if tokens were recovered
+      const finalBalance = await mockToken.balanceOf(owner.address)
+      expect(finalBalance - initialBalance).to.equal(tokens('1000'))
+    })
+  })
+
+  describe('Security Edge Cases', () => {
+    it('prevents recovery of JavaBean tokens', async () => {
+      const javaBeanAddress = await javabean.getAddress()
+      await expect(
+        javabean.recoverERC20(javaBeanAddress, tokens('1'))
+      ).to.be.revertedWith('JavaBean: Cannot recover JavaBean tokens')
+    })
+
+    it('only owner can set max transaction amount', async () => {
+      // Try as non-owner
+      await expect(javabean.connect(user1).setMaxTransactionAmount(tokens('1')))
+        .to.be.reverted
+
+      // Owner can do it
+      await expect(javabean.setMaxTransactionAmount(tokens('2000000'))).to.not
+        .be.reverted
+
+      // Verify the change
+      const newMaxAmount = await javabean.maxTransactionAmount()
+      expect(newMaxAmount).to.equal(tokens('2000000'))
+    })
+  })
 })

@@ -47,6 +47,13 @@ contract JavaBean is ERC20, Pausable, Ownable {
         emit maxTransactionAmountUpdated(amount);
     }
 
+    function setMaxTransactionAmount(uint256 amount) public onlyOwner {
+        require(amount > 0, 'JavaBean: Amount must be greater than 0');
+        require(amount <= totalSupply(), 'JavaBean: Amount must be less than total supply');
+        maxTransactionAmount = amount;
+        emit maxTransactionAmountUpdated(amount);
+    }
+
     // Emergency Token Recovery
     function recoverERC20(address tokenAddress, uint256 tokenAmount) public onlyOwner {
         require(tokenAddress != address(this), 'JavaBean: Cannot recover JavaBean tokens');
