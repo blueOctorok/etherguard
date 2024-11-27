@@ -31,5 +31,30 @@ describe('JavaBeanAnalyzer', () => {
       expect(minGas).to.equal(21000n)
       expect(maxGas).to.equal(21000n)
     })
+
+    it('should update statistics over multiple calls', async () => {
+      // Record several different gas values
+      await analyzer.recordGasUsage('transfer', 20000)
+      await analyzer.recordGasUsage('transfer', 22000)
+      await analyzer.recordGasUsage('transfer', 25000)
+
+      const [totalGas, calls, avgGas, minGas, maxGas] =
+        await analyzer.getGasInfo('transfer')
+
+      // Verify aggregated statistics
+      expect(calls).to.equal(3n)
+      expect(totalGas).to.equal(67000n)
+      expect(avgGas).to.equal(22333n)
+      expect(minGas).to.equal(20000n)
+      expect(maxGas).to.equal(25000n)
+    })
+  })
+
+  describe('Access Control', () => {
+    it('should allow any address to record gas usage', async () => {
+      // Try recording from a non-owner account
+      await expect(analyzer.connect(user1).recordGasUsage('transfer', 21000)).to
+        .not.be.reverted
+    })
   })
 })

@@ -127,4 +127,29 @@ describe('JavaBean', () => {
       expect(newMaxAmount).to.equal(tokens('2000000'))
     })
   })
+
+  describe('Gas Analysis Integration', () => {
+    let analyzer
+
+    beforeEach(async () => {
+      // Deploy analyzer first
+      const JavaBeanAnalyzer =
+        await ethers.getContractFactory('JavaBeanAnalyzer')
+      analyzer = await JavaBeanAnalyzer.deploy()
+      await analyzer.waitForDeployment()
+
+      // Set analyzer in JavaBean
+      await javabean.setAnalyzer(await analyzer.getAddress())
+    })
+
+    it('should record gas usage during transfers', async () => {
+      // Do a transfer
+      await javabean.transfer(user1.address, tokens('1000'))
+
+      // Check if gas was recorded
+      const [totalGas, calls] = await analyzer.getGasInfo('transfer')
+      expect(calls).to.equal(1n)
+      expect(totalGas).to.be.gt(0n) // Gas should be greater than 0
+    })
+  })
 })
