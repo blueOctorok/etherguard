@@ -6,6 +6,11 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// Interface to communicate with our analyzer contract
+interface IJavaBeanAnalyzer {
+    function recordGasUsage(string memory operation, uint256 gasUsed) external;
+}
+
 contract JavaBean is ERC20, Pausable, Ownable {
     // Cooldown mechanics
     mapping(address => uint256) private _lastTransferTime;
@@ -14,21 +19,18 @@ contract JavaBean is ERC20, Pausable, Ownable {
     // Max transaction limit
     uint256 public maxTransactionAmount;
 
+    // Reference to our gas analyzer contract
+    IJavaBeanAnalyzer public analyzer;
+
+    // Events
     event CooldownTriggered(address indexed user, uint256 timestamp);
     event maxTransactionAmountUpdated(uint256 newAmount);
     event TokensRecovered(address token, uint256 amount);
 
-    // Set the token name & and symbol ( JavaBean, JAVA)
     constructor() ERC20('JavaBean', 'JAVA') {
-        // Makes the deployer the owner
         _transferOwnership(msg.sender);
-        // 1 billion tokens with 18 decimals
-        // Decimals function returns 18 (standard ERC20)
-        // All tokens are minted to the deployers address
         uint256 totalSupply = 1_000_000_000 * 10 ** decimals();
         _mint(msg.sender, totalSupply);
-
-        // Set initial max transaction amount to 1% of total supply
         maxTransactionAmount = totalSupply / 100;
     }
 
@@ -40,13 +42,6 @@ contract JavaBean is ERC20, Pausable, Ownable {
         _unpause();
     }
 
-    function setTransactionAmount(uint256 amount) public onlyOwner {
-        require(amount > 0, 'JavaBean: Amount must be greater than 0');
-        require(amount <= totalSupply(), 'JavaBean: Amount must be less than total supply');
-        maxTransactionAmount = amount;
-        emit maxTransactionAmountUpdated(amount);
-    }
-
     function setMaxTransactionAmount(uint256 amount) public onlyOwner {
         require(amount > 0, 'JavaBean: Amount must be greater than 0');
         require(amount <= totalSupply(), 'JavaBean: Amount must be less than total supply');
@@ -54,18 +49,22 @@ contract JavaBean is ERC20, Pausable, Ownable {
         emit maxTransactionAmountUpdated(amount);
     }
 
-    // Emergency Token Recovery
+    // Set the analyzer contract address
+    function setAnalyzer(address analyzerAddress) public onlyOwner {
+        analyzer = IJavaBeanAnalyzer(analyzerAddress);
+    }
+
     function recoverERC20(address tokenAddress, uint256 tokenAmount) public onlyOwner {
         require(tokenAddress != address(this), 'JavaBean: Cannot recover JavaBean tokens');
         IERC20(tokenAddress).transfer(owner(), tokenAmount);
         emit TokensRecovered(tokenAddress, tokenAmount); 
     }
 
-    // modifier that checks if enough time has passed
     modifier checkCooldown(address from) {
-        // block.timestamp is the current time
-        // will revert if trying to transfer too quickly
-        require(_lastTransferTime[from] + TRANSFER_COOLDOWN <= block.timestamp, 'JavaBean: Cooldown period active. Good boys wait!');
+        require(
+            _lastTransferTime[from] + TRANSFER_COOLDOWN <= block.timestamp,
+            'JavaBean: Cooldown period active. Good boys wait!'
+        );
         _;
     }
 
@@ -74,24 +73,33 @@ contract JavaBean is ERC20, Pausable, Ownable {
         address to,
         uint256 amount 
     ) internal virtual override whenNotPaused { 
-    // First, check maximum transfer amount (simpler check)
-    if (from != address(0) && to != address(0)) {
-        require( 
-            amount <= maxTransactionAmount,
-            "JavaBean: Transfer amount exceeds maximum" 
-        );
-    }
-    
-    // Then check cooldown (more complex, time-based check)
-    if (from != address(0)) {
-        require(
-            _lastTransferTime[from] + TRANSFER_COOLDOWN <= block.timestamp,
-            "JavaBean: Cooldown period active. Good boys wait!"
-        );
-        _lastTransferTime[from] = block.timestamp;
-        emit CooldownTriggered(from, block.timestamp);
-    }
-    
-    super._beforeTokenTransfer(from, to, amount);
+        // Start measuring gas usage
+        uint256 startGas = gasleft();
+
+        // First, check maximum transfer amount (simpler check)
+        if (from != address(0) && to != address(0)) {
+            require( 
+                amount <= maxTransactionAmount,
+                "JavaBean: Transfer amount exceeds maximum" 
+            );
+        }
+        
+        // Then check cooldown (more complex, time-based check)
+        if (from != address(0)) {
+            require(
+                _lastTransferTime[from] + TRANSFER_COOLDOWN <= block.timestamp,
+                "JavaBean: Cooldown period active. Good boys wait!"
+            );
+            _lastTransferTime[from] = block.timestamp;
+            emit CooldownTriggered(from, block.timestamp);
+        }
+        
+        super._beforeTokenTransfer(from, to, amount);
+
+        // Calculate and record gas usage if analyzer is set
+        uint256 gasUsed = startGas - gasleft();
+        if (address(analyzer) != address(0)) {
+            analyzer.recordGasUsage("transfer", gasUsed);
+        }
     }
 }
