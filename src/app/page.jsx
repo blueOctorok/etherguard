@@ -1,4 +1,5 @@
 import TokenInfo from '@/components/blockchain/TokenInfo'
+import GasAnalytics from '@/components/blockchain/GasAnalytics'
 
 export default function Home() {
   return (
@@ -9,7 +10,7 @@ export default function Home() {
       </section>
       <section className="bg-slate-500 p-6 shadow">
         <h2 className="text-xl font-bold mb-4">Gas Analytics</h2>
-        --- Gas Analytics go here ---
+        <GasAnalytics />
       </section>
     </div>
   )
