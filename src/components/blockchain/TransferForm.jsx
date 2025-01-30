@@ -25,22 +25,31 @@ export default function TransferForm() {
       setStatus('Initiating transfer...')
       const { javabean } = await getContracts()
 
-      // Convert the amount into the correct format (18 decimals)
+      if (!ethers.isAddress(recipient)) {
+        setStatus(
+          'Invalid recipient address. Please enter a valid wallet address.'
+        )
+        return
+      }
+
       const transferAmount = ethers.parseUnits(amount, 18)
 
-      // Send the transaction
+      // Attempt to send transaction
       const tx = await javabean.transfer(recipient, transferAmount)
       setStatus('Transfer Pending...')
 
-      // Wait for tx to be mined
       await tx.wait()
       setStatus('Transfer complete!')
-
-      // Clear the form
       setRecipient('')
       setAmount('')
     } catch (error) {
-      setStatus(`Transfer failed: ${error.message}`)
+      if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
+        setStatus('Transaction failed due to insufficient funds or gas issues.')
+      } else if (error.code === 'ACTION_REJECTED') {
+        setStatus('Transaction rejected by user.')
+      } else {
+        setStatus(`Transfer failed: ${error.message}`)
+      }
     }
   }
 

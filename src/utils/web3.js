@@ -9,17 +9,23 @@ const JAVABEAN_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3'
 const ANALYZER_ADDRESS = '0xe7f1725e7734ce288f8367e1bb143e90bb3f0512'
 
 export const connectWallet = async () => {
-  if (typeof window.ethereum === 'undefined') {
-    throw new Error('Please install MetaMask!')
+  if (!window.ethereum) {
+    return { error: 'MetaMask is not installed. Please install it to proceed.' }
   }
 
-  await window.ethereum.request({ method: 'eth_requestAccounts' })
-  const provider = new ethers.BrowserProvider(window.ethereum)
-  const signer = await provider.getSigner()
+  try {
+    await window.ethereum.request({ method: 'eth_requestAccounts' })
+    const provider = new ethers.BrowserProvider(window.ethereum)
+    const signer = await provider.getSigner()
 
-  return {
-    signer,
-    address: await signer.getAddress()
+    return { signer, address: await signer.getAddress(), error: null }
+  } catch (error) {
+    if (error.code === 4001) {
+      return { error: 'Wallet connection request denied. Please try again.' }
+    }
+    return {
+      error: 'Failed to connect wallet. Please check MetaMask and try again.'
+    }
   }
 }
 
