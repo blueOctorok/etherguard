@@ -34,25 +34,29 @@ export default function TokenInfo() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">JavaBean Token ($JAVA)</h3>
+    <div className="bg-white p-6 shadow-md rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-bold text-gray-700">
+          JavaBean Token ($JAVA)
+        </h3>
         <button
           onClick={handleConnect}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           {connected ? 'Connected' : 'Connect Wallet'}
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 bg-gray-50 rounded text-black">
+      <div className="grid grid-cols-2 gap-6 p-6 bg-white shadow-md rounded-lg">
+        <div className="p-4 bg-gray-50 rounded-lg shadow">
           <p className="text-sm text-gray-500">Your Balance:</p>
-          <p className="text-xl font-bold">{tokenBalance} JAVA</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {tokenBalance} JAVA
+          </p>
         </div>
-        <div className="p-4 bg-gray-50 rounded text-black">
+        <div className="p-4 bg-gray-50 rounded-lg shadow">
           <p className="text-sm text-gray-500">Total Supply:</p>
-          <p className="text-xl font-bold">{totalSupply} JAVA</p>
+          <p className="text-2xl font-bold text-gray-800">{totalSupply} JAVA</p>
         </div>
       </div>
     </div>

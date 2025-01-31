@@ -54,11 +54,12 @@ export default function TransferForm() {
   }
 
   return (
-    <div className="mt-8">
-      <h3 className="text-lg font-semibold mb-4">Transfer Tokens</h3>
+    <div className="bg-white p-6 mt-6 shadow-md rounded-lg">
+      <h3 className="text-xl font-bold text-gray-700 mb-4">Transfer Tokens</h3>
+
       <form onSubmit={handleTransfer} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-600">
             Recipient Address
           </label>
           <input
@@ -66,12 +67,12 @@ export default function TransferForm() {
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             placeholder="0x..."
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-600">
             Amount (JAVA)
           </label>
           <input
@@ -79,20 +80,20 @@ export default function TransferForm() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.0"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200"
           />
         </div>
 
         <button
           type="submit"
           disabled={!connected}
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+          className={`w-full px-4 py-2 rounded-lg text-white font-semibold transition 
+    ${connected ? 'bg-blue-600 hover:bg-blue-700 shadow-md' : 'bg-gray-400 cursor-not-allowed'}`}
         >
-          Send Tokens
+          {connected ? 'Send Tokens' : 'Connect Wallet First'}
         </button>
-        {status && (
-          <p className="text-sm text-center text-gray-600">{status}</p>
-        )}
+
+        {status && <p className="text-sm text-center text-red-500">{status}</p>}
       </form>
     </div>
   )

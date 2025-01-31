@@ -48,36 +48,33 @@ export default function GasAnalytics() {
   }, [connected])
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <h3 className="text-xl font-semibold mb-2">Transfer Operations</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded">
-              <p className="text-sm text-gray-500">Average Gas:</p>
-              <p className="text-xl text-black font-bold">
-                {gasStats.transfer.avgGas}
-              </p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded">
-              <p className="text-sm text-gray-500">Total Transactions:</p>
-              <p className="text-xl text-black font-bold">
-                {gasStats.transfer.totalCalls}
-              </p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded">
-              <p className="text-sm text-gray-500">Minimum Gas:</p>
-              <p className="text-xl text-black font-bold">
-                {gasStats.transfer.minGas}
-              </p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded">
-              <p className="text-sm text-gray-500">Maximum Gas:</p>
-              <p className="text-xl text-black font-bold">
-                {gasStats.transfer.maxGas}
-              </p>
-            </div>
-          </div>
+    <div className="bg-white p-6 shadow-md rounded-lg">
+      <h3 className="text-xl font-bold text-gray-700 mb-4">Gas Analytics</h3>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div className="p-4 bg-gray-50 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Average Gas:</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {gasStats.transfer.avgGas}
+          </p>
+        </div>
+        <div className="p-4 bg-gray-50 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Total Transactions:</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {gasStats.transfer.totalCalls}
+          </p>
+        </div>
+        <div className="p-4 bg-gray-50 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Minimum Gas:</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {gasStats.transfer.minGas}
+          </p>
+        </div>
+        <div className="p-4 bg-gray-50 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Maximum Gas:</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {gasStats.transfer.maxGas}
+          </p>
         </div>
       </div>
     </div>
