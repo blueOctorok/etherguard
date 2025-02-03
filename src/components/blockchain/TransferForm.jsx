@@ -23,7 +23,13 @@ export default function TransferForm() {
 
     try {
       setStatus('Initiating transfer...')
-      const { javabean } = await getContracts()
+
+      // Ensure a signer is used
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+
+      // Pass the signer when fetching contracts
+      const { javabean } = await getContracts(signer)
 
       if (!ethers.isAddress(recipient)) {
         setStatus(
@@ -34,7 +40,7 @@ export default function TransferForm() {
 
       const transferAmount = ethers.parseUnits(amount, 18)
 
-      // Attempt to send transaction
+      // Send the transaction
       const tx = await javabean.transfer(recipient, transferAmount)
       setStatus('Transfer Pending...')
 

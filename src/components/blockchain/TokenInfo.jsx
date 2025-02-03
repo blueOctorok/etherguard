@@ -12,25 +12,36 @@ export default function TokenInfo() {
   )
 
   const handleConnect = async () => {
-    const { signer, address, error } = await connectWallet()
+    try {
+      const { signer, address, error } = await connectWallet()
+      if (error) {
+        alert(error) // Show user-friendly alert instead of console error
+        return
+      }
 
-    if (error) {
-      alert(error) // Show user-friendly alert instead of console error
-      return
+      dispatch(setWalletAddress(address))
+
+      // Ensure signer is used
+      const { javabean } = await getContracts(signer)
+
+      if (!javabean) {
+        console.error('Error: Contract not instantiated.')
+        return
+      }
+
+      // Ensure the balanceOf call is correct
+      const balance = await javabean.balanceOf(address)
+      const supply = await javabean.totalSupply()
+
+      dispatch(
+        setTokenInfo({
+          balance: ethers.formatUnits(balance, 18),
+          totalSupply: ethers.formatUnits(supply, 18)
+        })
+      )
+    } catch (error) {
+      console.error('Error fetching balance:', error)
     }
-
-    dispatch(setWalletAddress(address))
-
-    const { javabean } = await getContracts(signer)
-    const balance = await javabean.balanceOf(address)
-    const supply = await javabean.totalSupply()
-
-    dispatch(
-      setTokenInfo({
-        balance: ethers.formatUnits(balance, 18),
-        totalSupply: ethers.formatUnits(supply, 18)
-      })
-    )
   }
 
   return (

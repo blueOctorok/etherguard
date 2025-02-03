@@ -1,8 +1,8 @@
 import { ethers } from 'ethers'
 
 // Get contract ABIs
-import JavaBeanABI from '../artifacts/contracts/JavaBean.sol/JavaBean.json'
-import JavaBeanAnalyzerABI from '../artifacts/contracts/JavaBeanAnalyzer.sol/JavaBeanAnalyzer.json'
+import JavaBeanABI from '@/artifacts/contracts/JavaBean.sol/JavaBean.json'
+import JavaBeanAnalyzerABI from '@/artifacts/contracts/JavaBeanAnalyzer.sol/JavaBeanAnalyzer.json'
 
 // Contract addresses from our deployment
 const JAVABEAN_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3'
@@ -18,7 +18,7 @@ export const connectWallet = async () => {
     const provider = new ethers.BrowserProvider(window.ethereum)
     const signer = await provider.getSigner()
 
-    return { signer, address: await signer.getAddress(), error: null }
+    return { signer, address: await signer.getAddress(), provider, error: null }
   } catch (error) {
     if (error.code === 4001) {
       return { error: 'Wallet connection request denied. Please try again.' }
@@ -29,7 +29,12 @@ export const connectWallet = async () => {
   }
 }
 
-export const getContracts = async (signer) => {
+export const getContracts = async (signer = null) => {
+  if (!signer) {
+    const provider = new ethers.BrowserProvider(window.ethereum)
+    signer = await provider.getSigner() // Ensure a signer is used
+  }
+
   const javabean = new ethers.Contract(
     JAVABEAN_ADDRESS,
     JavaBeanABI.abi,
