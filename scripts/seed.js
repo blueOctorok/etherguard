@@ -4,8 +4,8 @@ async function main() {
   console.log('Starting to seed test data...')
 
   // Fetch contract addresses from environment variables
-  const javabeanAddress = process.env.JAVABEAN_ADDRESS
-  const analyzerAddress = process.env.ANALYZER_ADDRESS
+  const javabeanAddress = javabeanAddressParam || process.env.JAVABEAN_ADDRESS
+  const analyzerAddress = analyzerAddressParam || process.env.ANALYZER_ADDRESS
 
   // Validate input
   if (!javabeanAddress || !analyzerAddress) {
