@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { ethers } from 'ethers'
 import { useDispatch, useSelector } from 'react-redux'
@@ -12,7 +11,6 @@ export default function TokenInfo() {
     (state) => state.blockchain
   )
 
-  // Add loading and error states
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -31,7 +29,6 @@ export default function TokenInfo() {
 
       dispatch(setWalletAddress(address))
 
-      // Ensure signer is used
       const { javabean } = await getContracts(signer)
 
       if (!javabean) {
@@ -39,7 +36,6 @@ export default function TokenInfo() {
         return
       }
 
-      // Get token info
       const balance = await javabean.balanceOf(address)
       const supply = await javabean.totalSupply()
 
@@ -63,56 +59,89 @@ export default function TokenInfo() {
   }
 
   return (
-    <div className="bg-white p-6 shadow-md rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-gray-700">
-          JavaBean Token ($JAVA)
-        </h3>
-        <button
-          onClick={handleConnect}
-          disabled={loading}
-          className={`px-4 py-2 rounded-lg text-white transition ${
-            loading
-              ? 'bg-gray-400 cursor-wait'
-              : connected
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {loading
-            ? 'Connecting...'
-            : connected
-              ? `Connected: ${formatAddress(address)}`
-              : 'Connect Wallet'}
-        </button>
+    <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
+        <h2 className="text-white text-xl font-bold">Token Information</h2>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
+      <div className="p-6">
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg">
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
 
-      <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 shadow-md rounded-lg">
-        <div className="p-4 bg-white rounded-lg shadow">
-          <p className="text-sm text-gray-500">Your Balance:</p>
-          <p className="text-2xl font-bold text-gray-800">
-            {connected ? `${tokenBalance} JAVA` : '-- JAVA'}
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+              <span className="text-blue-600 font-bold">JB</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-800">JavaBean Token</h3>
+              <p className="text-gray-500 text-sm">$JAVA</p>
+            </div>
+          </div>
+
+          {connected ? (
+            <div className="flex items-center px-4 py-2 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="h-2 w-2 rounded-full bg-green-400 mr-2"></div>
+              <span className="text-sm font-medium text-gray-700">
+                {formatAddress(address)}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={handleConnect}
+              disabled={loading}
+              className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
+                loading
+                  ? 'bg-gray-400 cursor-wait'
+                  : 'bg-blue-600 hover:bg-blue-700 shadow-md'
+              }`}
+            >
+              {loading ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          )}
         </div>
-        <div className="p-4 bg-white rounded-lg shadow">
-          <p className="text-sm text-gray-500">Total Supply:</p>
-          <p className="text-2xl font-bold text-gray-800">
-            {connected ? `${totalSupply} JAVA` : '-- JAVA'}
-          </p>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-md transition-shadow">
+            <p className="text-sm font-medium text-gray-500">Your Balance</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">
+              {connected ? (
+                <span className="flex items-baseline">
+                  {parseFloat(tokenBalance).toLocaleString()}
+                  <span className="text-sm ml-1 text-gray-500">JAVA</span>
+                </span>
+              ) : (
+                '-- JAVA'
+              )}
+            </p>
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-md transition-shadow">
+            <p className="text-sm font-medium text-gray-500">Total Supply</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">
+              {connected ? (
+                <span className="flex items-baseline">
+                  {parseFloat(totalSupply).toLocaleString()}
+                  <span className="text-sm ml-1 text-gray-500">JAVA</span>
+                </span>
+              ) : (
+                '-- JAVA'
+              )}
+            </p>
+          </div>
         </div>
+
+        {!connected && !loading && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-center">
+            <p className="text-blue-600 text-sm">
+              Connect your wallet to view your JavaBean token balance
+            </p>
+          </div>
+        )}
       </div>
-
-      {!connected && !loading && (
-        <div className="mt-4 text-center text-gray-500 text-sm">
-          <p>Connect your wallet to view your JavaBean token balance</p>
-        </div>
-      )}
     </div>
   )
 }

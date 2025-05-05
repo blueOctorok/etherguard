@@ -4,17 +4,17 @@ import TransferForm from '@/components/blockchain/TransferForm'
 
 export default function Home() {
   return (
-    <div className="space-y-8">
-      <section className="bg-slate-500 p-6 shadow">
-        <h2 className="text-xl font-bold mb-4">Token Information</h2>
-        <TokenInfo />
-        <TransferForm />
-      </section>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container mx-auto py-8 px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <TokenInfo />
+          <TransferForm />
+        </div>
 
-      <section className="bg-slate-500 p-6 shadow">
-        <h2 className="text-xl font-bold mb-4">Gas Analytics</h2>
-        <GasAnalytics />
-      </section>
+        <div className="mt-8">
+          <GasAnalytics />
+        </div>
+      </div>
     </div>
   )
 }
