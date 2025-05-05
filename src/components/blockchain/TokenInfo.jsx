@@ -53,6 +53,17 @@ export default function TokenInfo() {
     }
   }
 
+  const handleDisconnect = () => {
+    // Reset the Redux state
+    dispatch(setWalletAddress(null))
+    dispatch(
+      setTokenInfo({
+        balance: '0',
+        totalSupply: '0'
+      })
+    )
+  }
+
   const formatAddress = (addr) => {
     if (!addr) return ''
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
@@ -83,11 +94,19 @@ export default function TokenInfo() {
           </div>
 
           {connected ? (
-            <div className="flex items-center px-4 py-2 bg-gray-50 rounded-lg border border-gray-100">
-              <div className="h-2 w-2 rounded-full bg-green-400 mr-2"></div>
-              <span className="text-sm font-medium text-gray-700">
-                {formatAddress(address)}
-              </span>
+            <div className="flex items-center">
+              <div className="flex items-center px-4 py-2 bg-gray-50 rounded-lg border border-gray-100 mr-3">
+                <div className="h-2 w-2 rounded-full bg-green-400 mr-2"></div>
+                <span className="text-sm font-medium text-gray-700">
+                  {formatAddress(address)}
+                </span>
+              </div>
+              <button
+                onClick={handleDisconnect}
+                className="px-3 py-2 rounded-lg text-red-600 border border-red-200 bg-red-50 font-medium hover:bg-red-100 transition-colors text-sm"
+              >
+                Disconnect
+              </button>
             </div>
           ) : (
             <button

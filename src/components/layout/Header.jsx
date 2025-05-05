@@ -1,13 +1,26 @@
 'use client'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { setWalletAddress, setTokenInfo } from '@/store/slices/blockchainSlice'
 
 export default function Header() {
   const { connected, address } = useSelector((state) => state.blockchain)
+  const dispatch = useDispatch()
 
   // Format address for display
   const formatAddress = (addr) => {
     if (!addr) return ''
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
+  }
+
+  const handleDisconnect = () => {
+    // Reset the Redux state
+    dispatch(setWalletAddress(null))
+    dispatch(
+      setTokenInfo({
+        balance: '0',
+        totalSupply: '0'
+      })
+    )
   }
 
   return (
@@ -21,11 +34,19 @@ export default function Header() {
         </div>
 
         {connected && (
-          <div className="flex items-center bg-blue-800/30 py-2 px-4 rounded-full">
-            <div className="h-2 w-2 rounded-full bg-green-400 mr-2"></div>
-            <span className="text-sm font-medium">
-              {formatAddress(address)}
-            </span>
+          <div className="flex items-center">
+            <div className="flex items-center bg-blue-800/30 py-2 px-4 rounded-full mr-3">
+              <div className="h-2 w-2 rounded-full bg-green-400 mr-2"></div>
+              <span className="text-sm font-medium">
+                {formatAddress(address)}
+              </span>
+            </div>
+            <button
+              onClick={handleDisconnect}
+              className="text-white text-sm bg-blue-800/40 hover:bg-blue-800/60 py-2 px-3 rounded-full transition-colors"
+            >
+              Disconnect
+            </button>
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import { ReduxProvider } from '@/components/Provider'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import NetworkStatus from '@/components/blockchain/NetworkStatus'
+import WalletListener from '@/components/blockchain/WalletListener'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
         className={`${inter.className} min-h-screen flex flex-col bg-gray-50`}
       >
         <ReduxProvider>
+          <WalletListener />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
