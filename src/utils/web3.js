@@ -1,12 +1,39 @@
 import { ethers } from 'ethers'
+import { getContractAddresses } from './contractConfig'
 
-// Get contract ABIs
-import JavaBeanABI from '@/artifacts/contracts/JavaBean.sol/JavaBean.json'
-import JavaBeanAnalyzerABI from '@/artifacts/contracts/JavaBeanAnalyzer.sol/JavaBeanAnalyzer.json'
+// Embedded ABIs
+const JavaBeanABI = [
+  'function name() view returns (string)',
+  'function symbol() view returns (string)',
+  'function decimals() view returns (uint8)',
+  'function totalSupply() view returns (uint256)',
+  'function balanceOf(address) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function transferFrom(address from, address to, uint256 amount) returns (bool)',
+  'function pause()',
+  'function unpause()',
+  'function paused() view returns (bool)',
+  'function owner() view returns (address)',
+  'function maxTransactionAmount() view returns (uint256)',
+  'function setMaxTransactionAmount(uint256 amount)',
+  'function setAnalyzer(address analyzerAddress)',
+  'function recoverERC20(address tokenAddress, uint256 tokenAmount)',
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
+  'event Approval(address indexed owner, address indexed spender, uint256 value)',
+  'event CooldownTriggered(address indexed user, uint256 timestamp)',
+  'event maxTransactionAmountUpdated(uint256 newAmount)',
+  'event TokensRecovered(address token, uint256 amount)'
+]
 
-// Contract addresses from our deployment
-const JAVABEAN_ADDRESS = '0x5fbdb2315678afecb367f032d93f642f64180aa3'
-const ANALYZER_ADDRESS = '0xe7f1725e7734ce288f8367e1bb143e90bb3f0512'
+const JavaBeanAnalyzerABI = [
+  'function recordGasUsage(string memory operation, uint256 gasUsed)',
+  'function getGasInfo(string memory operation) view returns (uint256 totalGas, uint256 calls, uint256 avgGas, uint256 minGas, uint256 maxGas)',
+  'function operationGas(bytes32) view returns (uint256 totalGas, uint256 calls, uint256 avgGas, uint256 minGas, uint256 maxGas)',
+  'function owner() view returns (address)',
+  'event GasUsageRecords(string operation, uint256 gasUsed, uint256 timestamp)'
+]
 
 export const connectWallet = async () => {
   if (!window.ethereum) {
@@ -20,7 +47,6 @@ export const connectWallet = async () => {
 
     return { signer, address: await signer.getAddress(), provider, error: null }
   } catch (error) {
-    console.error('Connection error:', error)
     if (error.code === 4001) {
       return { error: 'Wallet connection request denied. Please try again.' }
     }
@@ -30,71 +56,59 @@ export const connectWallet = async () => {
   }
 }
 
-// Note: Actual MetaMask disconnection requires the wallet to be disconnected from the dApp
-// Redux state reset is handled in the components
-export const disconnectWallet = async () => {
-  // In a real app, you might want to clear any cached connection info here
-  return { success: true }
-}
-
 export const getContracts = async (signer = null) => {
-  if (!window.ethereum) {
-    throw new Error('No Ethereum provider found')
-  }
-
   if (!signer) {
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      signer = await provider.getSigner()
-    } catch (error) {
-      console.error('Error getting signer:', error)
-      throw new Error('Unable to get signer. Please connect wallet first.')
-    }
+    const provider = new ethers.BrowserProvider(window.ethereum)
+    signer = await provider.getSigner()
   }
 
-  try {
-    const javabean = new ethers.Contract(
-      JAVABEAN_ADDRESS,
-      JavaBeanABI.abi,
-      signer
-    )
-    const analyzer = new ethers.Contract(
-      ANALYZER_ADDRESS,
-      JavaBeanAnalyzerABI.abi,
-      signer
-    )
+  // Get network info
+  const network = await signer.provider.getNetwork()
+  const chainId = Number(network.chainId)
 
-    return { javabean, analyzer }
-  } catch (error) {
-    console.error('Error creating contract instances:', error)
-    throw new Error('Failed to initialize contracts')
+  // Get contract addresses for this network
+  const { javabeanAddress, analyzerAddress } = getContractAddresses(chainId)
+
+  if (!javabeanAddress || !analyzerAddress) {
+    throw new Error(
+      `Contracts not deployed on network with chainId: ${chainId}`
+    )
   }
+
+  const javabean = new ethers.Contract(javabeanAddress, JavaBeanABI, signer)
+  const analyzer = new ethers.Contract(
+    analyzerAddress,
+    JavaBeanAnalyzerABI,
+    signer
+  )
+
+  return { javabean, analyzer }
 }
 
-// Utility function to listen for account changes
-export const setupWalletListeners = (callback) => {
-  if (!window.ethereum) return
+// Set up wallet event listeners
+export const setupWalletListeners = (handleAccountsChanged) => {
+  if (!window.ethereum) return null
 
-  // Handle account changes
-  window.ethereum.on('accountsChanged', (accounts) => {
+  const handleAccounts = (accounts) => {
     if (accounts.length === 0) {
-      // User disconnected their wallet
-      callback(null)
+      handleAccountsChanged(null)
     } else {
-      // Account changed
-      callback(accounts[0])
+      handleAccountsChanged(accounts[0])
     }
-  })
+  }
 
-  // Handle chain changes
-  window.ethereum.on('chainChanged', () => {
-    // Usually best to reload the page on chain change
+  const handleChainChanged = () => {
     window.location.reload()
-  })
+  }
 
+  window.ethereum.on('accountsChanged', handleAccounts)
+  window.ethereum.on('chainChanged', handleChainChanged)
+
+  // Return cleanup function
   return () => {
-    // Cleanup listeners when component unmounts
-    window.ethereum.removeListener('accountsChanged', callback)
-    window.ethereum.removeListener('chainChanged', () => {})
+    if (window.ethereum) {
+      window.ethereum.removeListener('accountsChanged', handleAccounts)
+      window.ethereum.removeListener('chainChanged', handleChainChanged)
+    }
   }
 }
